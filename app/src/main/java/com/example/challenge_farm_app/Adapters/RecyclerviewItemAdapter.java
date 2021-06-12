@@ -3,6 +3,7 @@ package com.example.challenge_farm_app.Adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Parcelable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.challenge_farm_app.Models.Animal;
@@ -20,8 +22,13 @@ import com.example.challenge_farm_app.Activities.InfoActivity;
 import com.example.challenge_farm_app.Models.Animal;
 import com.example.challenge_farm_app.R;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewItemAdapter.MyViewHolder>implements Filterable {
 
@@ -46,9 +53,49 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
 
     @Override
     public void onBindViewHolder(final RecyclerviewItemAdapter.MyViewHolder holder, final int position) {
+        long days = 0;
         final Animal animal = animalsList.get(position);
         holder.name.setText(animal.getName());
         holder.id.setText(String.valueOf(animal.getId()));
+//        Log.d("Status2", animal.getStatus2());
+        try {
+            days = daysDiff(animal.getStatus_date());
+//            Log.d("days", ""+daysDiff(animal.getStatus_date()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        if(animal.getStatus2().equals("حالة ولادة") && days>=45) {
+            holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.yellow_border));
+            holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.yellow_border));
+        }
+
+        if(animal.getStatus2().equals("هرمون") && days>=30) {
+            holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.green_border));
+            holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.green_border));
+        }
+
+        if(animal.getStatus2().equals("فلين") && days>=12) {
+            holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.black_border));
+            holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.black_border));
+        }
+        if(animal.getStatus2().equals("عشار") && days>90 && days<120) {
+            holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.dark_blue_border));
+            holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.dark_blue_border));
+        }
+
+        if(animal.getStatus2().equals("عشار") && days>=120) {
+            holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.red_border));
+            holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.red_border));
+        }
+        if(animal.getStatus2().equals("محذوف")) {
+            holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.light_blue_border));
+            holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.light_blue_border));
+        }
+        if(animal.getStatus2().equals("مشكلة")) {
+            holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.pink_border));
+            holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.pink_border));
+        }
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -146,4 +193,19 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
             // itemLayout =  itemView.findViewById(R.id.itemLayout);
         }
     }
+
+
+    public long daysDiff(String status_date)
+            throws ParseException {
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        Date firstDate = sdf.parse(status_date);
+        Date current = new Date();
+        Date secondDate = sdf.parse(sdf.format(current));
+        long diffInMillies = Math.abs(secondDate.getTime() - firstDate.getTime());
+        long days = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+
+        return days;
+    }
 }
+

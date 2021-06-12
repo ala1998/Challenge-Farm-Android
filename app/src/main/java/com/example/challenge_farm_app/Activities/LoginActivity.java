@@ -3,10 +3,12 @@ package com.example.challenge_farm_app.Activities;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
@@ -34,17 +36,24 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
-    String serialNumber = "unknown";
+    String device_imei = "";
+    String IMEI1 = "352682501302805";
+    String IMEI2 = "359646201302806";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-//        getSupportActionBar().hide();
+//        getSupportActionBarf().hide();
         final EditText username = findViewById(R.id.input_username);
 
         final EditText pass = findViewById(R.id.input_password);
         AppCompatButton loginBTN = findViewById(R.id.btn_login);
+
+        TelephonyManager telephonyManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+        device_imei = telephonyManager.getDeviceId();
+
       /*  if (serialNumber.equals("unknown")){
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -78,7 +87,7 @@ public class LoginActivity extends AppCompatActivity {
                 UsersList users = response.body();
                 boolean found = false, valid = true;
                 //TODO: Change this condition to not (!)
-                if (serialNumber.equals("FFFFFF"))
+                if (!device_imei.equals(IMEI1) && !device_imei.equals(IMEI2))
                 {
                     Toast.makeText(LoginActivity.this, "You can't login to our system on this device!", Toast.LENGTH_LONG).show();
                     //valid = false;
@@ -86,7 +95,7 @@ public class LoginActivity extends AppCompatActivity {
                 else{
                     for(int i=0; i<users.getUsers().size(); i++)
                         if (username.equals(users.getUsers().get(i).getUsername()) && pass.equals(users.getUsers().get(i).getPassword())) {
-                            Intent intent = new Intent(LoginActivity.this, AnimalsActivity.class);
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             startActivity(intent);
 //                            overridePendingTransition(R.anim.bottom_up, R.anim.activity);
 //                            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
