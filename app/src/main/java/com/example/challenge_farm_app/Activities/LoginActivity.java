@@ -51,9 +51,16 @@ public class LoginActivity extends AppCompatActivity {
         final EditText pass = findViewById(R.id.input_password);
         AppCompatButton loginBTN = findViewById(R.id.btn_login);
 
-        TelephonyManager telephonyManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        device_imei = telephonyManager.getDeviceId();
+        TelephonyManager telephonyMgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 
+
+        if(Build.VERSION.SDK_INT<Build.VERSION_CODES.O)
+            device_imei = telephonyMgr.getDeviceId();
+        else
+            device_imei = telephonyMgr.getImei();
+
+        Log.d("SDK", ""+Build.VERSION.SDK_INT);
+        Log.d("IMEI", device_imei);
       /*  if (serialNumber.equals("unknown")){
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -76,8 +83,11 @@ public class LoginActivity extends AppCompatActivity {
     public void checkUser(final String username, final String pass) {
 
         // String ip = getLocalIpAddress();
-        // String ip = "192.168.1.106";
-        String ip = "10.0.2.2";
+//        Log.d("IP", ""+getLocalIpAddress());
+
+//        String ip = "192.168.1.8";
+        String ip = "192.168.1.112";
+//        String ip = "10.0.2.2";
         final GetDataService service = RetrofitClientInstance.getRetrofitInstance(ip).create(GetDataService.class);
         Call<UsersList> usersCall = service.getAllUsers();
 
@@ -86,10 +96,9 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call<UsersList> call, Response<UsersList> response) {
                 UsersList users = response.body();
                 boolean found = false, valid = true;
-                //TODO: Change this condition to not (!)
                 if (!device_imei.equals(IMEI1) && !device_imei.equals(IMEI2))
                 {
-                    Toast.makeText(LoginActivity.this, "You can't login to our system on this device!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, "لا يمكنك الدخول على النظام من هذا الجهاز!", Toast.LENGTH_LONG).show();
                     //valid = false;
                 }
                 else{
@@ -121,19 +130,52 @@ public class LoginActivity extends AppCompatActivity {
         });
 
     }
-    public String getLocalIpAddress() {
+  /*  public String getLocalIpAddress() {
+        String ipResult;
         WifiManager manager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        String phoneIP= Formatter.formatIpAddress(manager.getConnectionInfo().getIpAddress());
+        String[] tokens = phoneIP.split(".");
+        int lastDigit = Integer.parseInt(tokens[3]);
+        int prev, next;
+        if(lastDigit-19>0)
+            prev = lastDigit-19;
+        else
+            prev = 1;
+
+        if(lastDigit+19 <256)
+            next = lastDigit+19;
+        else
+            next=255;
+
+        for(int i=prev; i<=next;i++)
+        {
+            final int last = i;
+            final GetDataService service = RetrofitClientInstance.getRetrofitInstance(tokens[0]+"."+tokens[1]+"."+tokens[2]+"."+last).create(GetDataService.class);
+            Call<UsersList> usersCall = service.getAllUsers();
+
+            usersCall.enqueue(new Callback<UsersList>() {
+                @Override
+                public void onResponse(Call<UsersList> call, Response<UsersList> response) {
+//                   ipResult = tokens[0]+"."+tokens[1]+"."+tokens[2]+"."+last;
+                }
+
+                @Override
+                public void onFailure(Call<UsersList> call, Throwable t) {
+
+                }
+            });
+        }
         return Formatter.formatIpAddress(manager.getConnectionInfo().getIpAddress());
 
-      /*  InetAddress iA= null;
+      *//*  InetAddress iA= null;
         try {
             iA = InetAddress.getLocalHost();
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        System.out.println(iA.getHostAddress());*/
+        System.out.println(iA.getHostAddress());*//*
 
-      /*  try {
+      *//*  try {
             for (Enumeration<NetworkInterface> en = NetworkInterface
                     .getNetworkInterfaces(); en.hasMoreElements();) {
                 NetworkInterface intf = en.nextElement();
@@ -148,6 +190,6 @@ public class LoginActivity extends AppCompatActivity {
         } catch (SocketException ex) {
             Log.e("Socket Error",ex.toString());
         }
-        return ""; */
-    }
+        return ""; *//*
+    }*/
 }
