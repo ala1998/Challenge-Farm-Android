@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -49,9 +50,9 @@ public class AnimalsActivity extends AppCompatActivity {
     TextView loadingTV;
     AppBarLayout appBarLayout;
     Toolbar toolbar;
-    String ip = "10.0.2.2";
+    String ip;
     View include;
-
+    Activity activity;
     // boolean searchFlag = false;
     @SuppressLint("ResourceType")
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -60,7 +61,9 @@ public class AnimalsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_animals);
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-    //    getSupportActionBar().hide();
+        activity = (Activity) this;
+
+        //    getSupportActionBar().hide();
         Configuration configuration = getResources().getConfiguration();
         configuration.setLayoutDirection(new Locale("ar"));
         getResources().updateConfiguration(configuration, getResources().getDisplayMetrics());
@@ -71,9 +74,9 @@ public class AnimalsActivity extends AppCompatActivity {
 //        toolbar = findViewById(R.id.toolbar);
         include = findViewById(R.id.includeView);
 
-        // String ip = getLocalIpAddress();
-        // String ip = "192.168.1.106";
-       //animalArrayList = getIntent().getParcelableArrayListExtra("ANIMALS_LIST");
+        ip = getIntent().getStringExtra("IP");
+
+        //animalArrayList = getIntent().getParcelableArrayListExtra("ANIMALS_LIST");
 
         if(animalArrayList == null) {
          fetchAnimals();
@@ -188,7 +191,7 @@ public class AnimalsActivity extends AppCompatActivity {
 
 
                     recyclerView = findViewById(R.id.recycleView);
-                    recyclerviewItemAdapter = new RecyclerviewItemAdapter(animalArrayList, AnimalsActivity.this);
+                    recyclerviewItemAdapter = new RecyclerviewItemAdapter(animalArrayList, AnimalsActivity.this, ip, activity);
 
                     recyclerView.setHasFixedSize(true);
                     RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());

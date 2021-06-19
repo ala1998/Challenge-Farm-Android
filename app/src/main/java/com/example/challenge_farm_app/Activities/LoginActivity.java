@@ -2,13 +2,15 @@ package com.example.challenge_farm_app.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.core.app.ActivityCompat;
 
-import android.content.Context;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.telephony.TelephonyManager;
+import android.provider.Settings;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
@@ -16,78 +18,55 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.challenge_farm_app.Models.AnimalsList;
-import com.example.challenge_farm_app.Models.User;
 import com.example.challenge_farm_app.Models.UsersList;
 import com.example.challenge_farm_app.Network.GetDataService;
 import com.example.challenge_farm_app.Network.RetrofitClientInstance;
 import com.example.challenge_farm_app.R;
-import com.example.challenge_farm_app.Activities.AnimalsActivity;
-
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Enumeration;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
-    String device_imei = "";
-    String IMEI1 = "352682501302805";
-    String IMEI2 = "359646201302806";
+    // String userAndroidId = "636bcf4b90a007bf"; // LG Id
+    String userAndroidId = "D94BEA6FB3C703F1"; // Redmi 9 note s Id
+    String phoneAndroidId;
+    String ip;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-//        getSupportActionBarf().hide();
-        final EditText username = findViewById(R.id.input_username);
 
+        ActivityCompat.requestPermissions(LoginActivity.this,
+                new String[]{Manifest.permission.READ_PHONE_STATE},
+                1);
+
+        getLocalIpAddress();
+
+        final EditText username = findViewById(R.id.input_username);
         final EditText pass = findViewById(R.id.input_password);
         AppCompatButton loginBTN = findViewById(R.id.btn_login);
 
-        TelephonyManager telephonyMgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        Log.d("androidId", "" + phoneAndroidId);
 
-
-        if(Build.VERSION.SDK_INT<Build.VERSION_CODES.O)
-            device_imei = telephonyMgr.getDeviceId();
-        else
-            device_imei = telephonyMgr.getImei();
-
-        Log.d("SDK", ""+Build.VERSION.SDK_INT);
-        Log.d("IMEI", device_imei);
-      /*  if (serialNumber.equals("unknown")){
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    serialNumber = Build.getSerial();
-                }
-            } catch (SecurityException e) {
-                e.printStackTrace();
-                Log.d("responseData", String.valueOf(e.getMessage()));
-            }
-        }*/
         loginBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                checkUser(username.getText().toString(), pass.getText().toString());
+                if (phoneAndroidId.equals(userAndroidId)) {
+                    checkUser(username.getText().toString(), pass.getText().toString());
+                } else {
+                    Toast.makeText(LoginActivity.this, "لا يمكنك الدخول على النظام من هذا الجهاز!", Toast.LENGTH_LONG).show();
+                }
             }
         });
-
     }
 
     public void checkUser(final String username, final String pass) {
-
-        // String ip = getLocalIpAddress();
-//        Log.d("IP", ""+getLocalIpAddress());
-
-//        String ip = "192.168.1.8";
-        String ip = "192.168.1.112";
-//        String ip = "10.0.2.2";
+        // String ip = "192.168.1.8";
+        // String ip = "192.168.1.112";
+//         String ip = "10.0.2.2";
         final GetDataService service = RetrofitClientInstance.getRetrofitInstance(ip).create(GetDataService.class);
         Call<UsersList> usersCall = service.getAllUsers();
 
@@ -96,30 +75,19 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call<UsersList> call, Response<UsersList> response) {
                 UsersList users = response.body();
                 boolean found = false, valid = true;
-                if (!device_imei.equals(IMEI1) && !device_imei.equals(IMEI2))
-                {
-                    Toast.makeText(LoginActivity.this, "لا يمكنك الدخول على النظام من هذا الجهاز!", Toast.LENGTH_LONG).show();
-                    //valid = false;
-                }
-                else{
-                    for(int i=0; i<users.getUsers().size(); i++)
-                        if (username.equals(users.getUsers().get(i).getUsername()) && pass.equals(users.getUsers().get(i).getPassword())) {
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            startActivity(intent);
-//                            overridePendingTransition(R.anim.bottom_up, R.anim.activity);
-//                            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
-//                            overridePendingTransition(R.anim.activity, R.anim.bottom_down);
-//                            overridePendingTransition(R.anim.fade_out, R.anim.fade_in);
 
-                            found = true;
-                            break;
-                            //}
-                        }
+                for (int i = 0; i < users.getUsers().size(); i++)
+                    if (username.equals(users.getUsers().get(i).getUsername()) && pass.equals(users.getUsers().get(i).getPassword())) {
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        intent.putExtra("IP",ip);
+                        startActivity(intent);
+                        overridePendingTransition(R.anim.bottom_down, R.anim.bottom_up);
+                        found = true;
+                        break;
+                    }
 
-                    if (!found)
-                        Toast.makeText(LoginActivity.this, "The username or password is wrong, try again please!", Toast.LENGTH_SHORT).show();
-                }
-
+                if (!found)
+                    Toast.makeText(LoginActivity.this, "The username or password is wrong, try again please!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -130,66 +98,62 @@ public class LoginActivity extends AppCompatActivity {
         });
 
     }
-  /*  public String getLocalIpAddress() {
-        String ipResult;
+
+    public void getLocalIpAddress() {
         WifiManager manager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        String phoneIP= Formatter.formatIpAddress(manager.getConnectionInfo().getIpAddress());
-        String[] tokens = phoneIP.split(".");
+        String phoneIP = Formatter.formatIpAddress(manager.getConnectionInfo().getIpAddress());
+        String[] tokens = phoneIP.split("\\.");
+        Log.d("phoneIP", phoneIP);
+
         int lastDigit = Integer.parseInt(tokens[3]);
         int prev, next;
-        if(lastDigit-19>0)
-            prev = lastDigit-19;
+        if (lastDigit - 19 > 0)
+            prev = lastDigit - 19;
         else
             prev = 1;
 
-        if(lastDigit+19 <256)
-            next = lastDigit+19;
+        if (lastDigit + 19 < 256)
+            next = lastDigit + 19;
         else
-            next=255;
+            next = 255;
 
-        for(int i=prev; i<=next;i++)
-        {
-            final int last = i;
-            final GetDataService service = RetrofitClientInstance.getRetrofitInstance(tokens[0]+"."+tokens[1]+"."+tokens[2]+"."+last).create(GetDataService.class);
+        for (int i = prev; i <= next; i++) {
+            String checkedIP = tokens[0] + "." + tokens[1] + "." + tokens[2] + "." + i;
+            final GetDataService service = RetrofitClientInstance.getRetrofitInstance(checkedIP).create(GetDataService.class);
             Call<UsersList> usersCall = service.getAllUsers();
-
             usersCall.enqueue(new Callback<UsersList>() {
                 @Override
                 public void onResponse(Call<UsersList> call, Response<UsersList> response) {
-//                   ipResult = tokens[0]+"."+tokens[1]+"."+tokens[2]+"."+last;
+                    if (response.isSuccessful()) {
+                        ip = checkedIP;
+                    }
                 }
 
                 @Override
                 public void onFailure(Call<UsersList> call, Throwable t) {
-
+                    Log.d("onFailure", t.getLocalizedMessage());
                 }
             });
         }
-        return Formatter.formatIpAddress(manager.getConnectionInfo().getIpAddress());
+    }
 
-      *//*  InetAddress iA= null;
-        try {
-            iA = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        System.out.println(iA.getHostAddress());*//*
-
-      *//*  try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface
-                    .getNetworkInterfaces(); en.hasMoreElements();) {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf
-                        .getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()) {
-                        return inetAddress.getHostAddress().toString();
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    try {
+                        phoneAndroidId = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
+                } else {
+                    Toast.makeText(LoginActivity.this, "يُرجى السماح بالوصول إلى أذونات الهاتف للتحقق من صلاحية الجهاز لدخول النظام!", Toast.LENGTH_LONG).show();
                 }
+                return;
             }
-        } catch (SocketException ex) {
-            Log.e("Socket Error",ex.toString());
         }
-        return ""; *//*
-    }*/
+    }
 }

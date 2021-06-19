@@ -17,7 +17,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void goToAnimals(View view) {
+        String ip = getIntent().getStringExtra("IP");
         Intent intent = new Intent(MainActivity.this, AnimalsActivity.class);
+        intent.putExtra("IP", ip);
         startActivity(intent);
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+
     }
 }
