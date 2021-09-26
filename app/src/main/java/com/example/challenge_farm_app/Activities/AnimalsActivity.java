@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,7 +32,18 @@ import com.example.challenge_farm_app.Network.GetDataService;
 import com.example.challenge_farm_app.Network.RetrofitClientInstance;
 import com.example.challenge_farm_app.R;
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -53,6 +65,8 @@ public class AnimalsActivity extends AppCompatActivity {
     String ip;
     View include;
     Activity activity;
+    String JSONPath = "/storage/emulated/legacy/Download";
+
     // boolean searchFlag = false;
     @SuppressLint("ResourceType")
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -78,82 +92,10 @@ public class AnimalsActivity extends AppCompatActivity {
 
         //animalArrayList = getIntent().getParcelableArrayListExtra("ANIMALS_LIST");
 
-        if(animalArrayList == null) {
-         fetchAnimals();
+        if (animalArrayList == null) {
+            showGIF();
+            fetchAnimalsFromLocal();
         }
-        else
-        {
-           showGIF();
-        }
-/*
-            TableLayout tableLayout = findViewById(R.id.table_layout);
-            TableRow titlesRow = findViewById(R.id.titles_row);
-            titlesRow.setVisibility(View.VISIBLE);*/
-
-        /*    TextView id_tv, name_tv;
-            for (int i = 0; i < animals_num; i++) {
-                TableRow row = new TableRow(this);
-                TableRow.LayoutParams lp = new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,TableRow.LayoutParams.WRAP_CONTENT);
-                row.setLayoutParams(lp);
-       //         row.setBackgroundColor(Color.parseColor("#DAE8FC"));
-                row.setPadding(5, 5, 5, 5);
-                id_tv = new TextView(this);
-                id_tv.setTag("id"+i);
-                id_tv.setGravity(Gravity.CENTER);
-                id_tv.setBackgroundResource(R.drawable.table_border);
-                id_tv.setTextColor(Color.parseColor("#ffffff"));
-                name_tv = new TextView(this);
-                name_tv.setTag("name"+i);
-                name_tv.setGravity(Gravity.CENTER);
-                name_tv.setBackgroundResource(R.drawable.table_border);
-                name_tv.setTextColor(Color.parseColor("#ffffff"));
-
-                TableRow.LayoutParams params = new TableRow.LayoutParams(
-                        TableRow.LayoutParams.WRAP_CONTENT,
-                        TableRow.LayoutParams.WRAP_CONTENT,
-                        1.0f
-                );
-                id_tv.setLayoutParams(params);
-                name_tv.setLayoutParams(params);
-                id_tv.setPadding(5,5,5,5);
-                name_tv.setPadding(5,5,5,5);
-                row.addView(name_tv);
-                row.addView(id_tv);
-          //      tableLayout.addView(row);
-            }
-
-            AppCompatButton displayBTN = new AppCompatButton(this);
-
-            TableRow.LayoutParams params = new TableRow.LayoutParams(
-                    TableRow.LayoutParams.WRAP_CONTENT,
-                    TableRow.LayoutParams.WRAP_CONTENT
-            );
-            params.setMargins(25,50,25,50);
-            params.gravity = Gravity.CENTER_HORIZONTAL;
-            params.topMargin = 100;
-            displayBTN.setLayoutParams(params);
-            displayBTN.setText("عرض");
-            displayBTN.setTextColor(Color.parseColor("#ffffff"));
-            displayBTN.setTextSize(25);
-            displayBTN.setPadding(12,12,12,12);
-            displayBTN.setBackgroundResource(R.color.colorAccent);
-            displayBTN.setTypeface(null, Typeface.BOLD);
-
-            displayBTN.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-         */
-               /*     for(int i=0; i<animalArrayList.size(); i++) {
-                        TextView id_tv = findViewById(R.id.table_layout).findViewWithTag("id"+i);
-                        id_tv.setText(""+animalArrayList.get(i).getId());
-                        TextView name_tv = findViewById(R.id.table_layout).findViewWithTag("name"+i);
-                        name_tv.setText(animalArrayList.get(i).getName());
-                    }
-                }
-            });
-            LinearLayout linearLayout = findViewById(R.id.main_layout);
-            linearLayout.addView(displayBTN);*/
 
     }
 
@@ -165,24 +107,13 @@ public class AnimalsActivity extends AppCompatActivity {
 //        toolbar.setVisibility(View.GONE);
     }
 
-    private void fetchAnimals() {
-
-        final GetDataService service = RetrofitClientInstance.getRetrofitInstance(ip).create(GetDataService.class);
-        Call<AnimalsList> animalsCall = service.getAllAnimals();
-        animalsCall.enqueue(new Callback<AnimalsList>() {
-            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
-            @Override
-            public void onResponse(Call<AnimalsList> call, Response<AnimalsList> response) {
-                AnimalsList animals = response.body();
-                animalArrayList = animals.getAnimals();
-                if(animalArrayList != null)
-                {
-
-                    gifImageView.setVisibility(View.GONE);
-                    loadingTV.setVisibility(View.GONE);
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
+    private void displayRecyclerView(ArrayList<Animal> animalArrayList) {
+        gifImageView.setVisibility(View.GONE);
+        loadingTV.setVisibility(View.GONE);
 //                    appBarLayout.setVisibility(View.VISIBLE);
 //                    toolbar.setVisibility(View.VISIBLE);
-                    include.setVisibility(View.VISIBLE);
+        include.setVisibility(View.VISIBLE);
 
 //                    setSupportActionBar(toolbar);
 //                   // getSupportActionBar().setTitle("ابحث");
@@ -190,67 +121,111 @@ public class AnimalsActivity extends AppCompatActivity {
 //                    getSupportActionBar().setCustomView(R.layout.customactionbar);
 
 
-                    recyclerView = findViewById(R.id.recycleView);
-                    recyclerviewItemAdapter = new RecyclerviewItemAdapter(animalArrayList, AnimalsActivity.this, ip, activity);
+        recyclerView = findViewById(R.id.recycleView);
+        recyclerviewItemAdapter = new RecyclerviewItemAdapter(animalArrayList, AnimalsActivity.this, ip, activity);
 
-                    recyclerView.setHasFixedSize(true);
-                    RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
-                    recyclerView.setLayoutManager(layoutManager);
-                    recyclerView.setItemAnimator(new DefaultItemAnimator());
-                    recyclerView.setAdapter(recyclerviewItemAdapter);
-                    SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        recyclerView.setHasFixedSize(true);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(recyclerviewItemAdapter);
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
 
-                    searchView = findViewById(R.id.searchView);
-                    searchView.setSearchableInfo(searchManager
-                            .getSearchableInfo(getComponentName()));
-                    searchView.setMaxWidth(Integer.MAX_VALUE);
+        searchView = findViewById(R.id.searchView);
+        searchView.setSearchableInfo(searchManager
+                .getSearchableInfo(getComponentName()));
+        searchView.setMaxWidth(Integer.MAX_VALUE);
 //                    searchView.setLayoutParams(new ActionBar.LayoutParams((Gravity.RIGHT)));
-                    searchView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_END);
-                    searchView.setTextDirection(View.TEXT_DIRECTION_ANY_RTL);
+        searchView.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_END);
+        searchView.setTextDirection(View.TEXT_DIRECTION_ANY_RTL);
 
-                    // listening to search query text change
-                    searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                        @Override
-                        public boolean onQueryTextSubmit(String query) {
-                            //Toast.makeText(AnimalsActivity.this,"SUBMIT\n"+query,Toast.LENGTH_LONG).show();
+        // listening to search query text change
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                //Toast.makeText(AnimalsActivity.this,"SUBMIT\n"+query,Toast.LENGTH_LONG).show();
 
-                            // filter recycler view when query submitted
-                            recyclerviewItemAdapter.getFilter().filter(query);
-                            // Toast.makeText(AnimalsActivity.this,, Toast.LENGTH_LONG).show();
-                            //   searchFlag = true;
-                            recyclerviewItemAdapter.notifyDataSetChanged();
-                            return true;
-                        }
-
-                        @Override
-                        public boolean onQueryTextChange(String query) {
-                            //  Toast.makeText(AnimalsActivity.this,"Change\n"+query,Toast.LENGTH_LONG).show();
-
-                            // filter recycler view when text is changed
-                            recyclerviewItemAdapter.getFilter().filter(query);
-                            recyclerviewItemAdapter.notifyDataSetChanged();
-                            return false;
-                        }
-                    });
-
-                }
-                else
-                    showGIF();
+                // filter recycler view when query submitted
+                recyclerviewItemAdapter.getFilter().filter(query);
+                // Toast.makeText(AnimalsActivity.this,, Toast.LENGTH_LONG).show();
+                //   searchFlag = true;
+                recyclerviewItemAdapter.notifyDataSetChanged();
+                return true;
             }
 
             @Override
-            public void onFailure(Call<AnimalsList> call, Throwable t) {
-                Toast.makeText(AnimalsActivity.this, t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+            public boolean onQueryTextChange(String query) {
+                //  Toast.makeText(AnimalsActivity.this,"Change\n"+query,Toast.LENGTH_LONG).show();
+
+                // filter recycler view when text is changed
+                recyclerviewItemAdapter.getFilter().filter(query);
+                recyclerviewItemAdapter.notifyDataSetChanged();
+                return false;
             }
         });
-        /*
-        if(animalArrayList == null)
-            Toast.makeText(this,"Error in displaying animals!",Toast.LENGTH_LONG).show();
-        else {
-            int animals_num = animalArrayList.size();*/
-//          Toast.makeText(this, "" + animals_num, Toast.LENGTH_LONG).show();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
+    private void fetchAnimalsFromLocal() {
+
+        if ((animalArrayList = readFileOnInternalStorage("animals.json").getAnimals()) != null) {
+//            animalArrayList = readFileOnInternalStorage("animals.json").getAnimals();
+
+            displayRecyclerView(animalArrayList);
+
+        } else
+            showGIF();
+    }
 
 
+    private String prepareJSON(ArrayList<Animal> animalArrayList) throws JSONException {
+
+        JSONObject result = new JSONObject();
+
+        try {
+            result.put("status", 200);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        JSONArray jsonAnimalsArray = new JSONArray();
+
+        for (int i = 0; i < animalArrayList.size(); i++) {
+            JSONObject animal = new JSONObject();
+            animal.put("id", animalArrayList.get(i).getId());
+            animal.put("name", animalArrayList.get(i).getName());
+            animal.put("parcode", animalArrayList.get(i).getParcode());
+            animal.put("farm_number", animalArrayList.get(i).getFarm_number());
+            animal.put("date_of_birth", animalArrayList.get(i).getDate_of_birth());
+            animal.put("age_y", animalArrayList.get(i).getAge_y());
+            animal.put("age_m", animalArrayList.get(i).getAge_m());
+            animal.put("age_d", animalArrayList.get(i).getAge_d());
+            animal.put("weight", animalArrayList.get(i).getWeight());
+            animal.put("sex", animalArrayList.get(i).getSex());
+            animal.put("mother_num", animalArrayList.get(i).getMother_num());
+            animal.put("childern_num", animalArrayList.get(i).getChildern_num());
+            animal.put("farm_id", animalArrayList.get(i).getFarm_id());
+            animal.put("solala_id", animalArrayList.get(i).getSolala_id());
+            animal.put("jawda_id", animalArrayList.get(i).getJawda_id());
+            animal.put("sell_price", animalArrayList.get(i).getSell_price());
+            animal.put("cost_price", animalArrayList.get(i).getCost_price());
+            animal.put("fetam_weight", animalArrayList.get(i).getFetam_weight());
+            animal.put("milk_amount", animalArrayList.get(i).getMilk_amount());
+            animal.put("weladat_num", animalArrayList.get(i).getWeladat_num());
+            animal.put("twins_avarage", animalArrayList.get(i).getTwins_avarage());
+            animal.put("status1", animalArrayList.get(i).getStatus1());
+            animal.put("status2", animalArrayList.get(i).getStatus2());
+            animal.put("note", animalArrayList.get(i).getNote());
+            animal.put("status_date", animalArrayList.get(i).getStatus_date());
+            animal.put("fetam_done", animalArrayList.get(i).getFetam_done());
+            animal.put("to3om_done", animalArrayList.get(i).getTo3om_done());
+            jsonAnimalsArray.put(animal);
+        }
+
+        result.put("data", jsonAnimalsArray);
+
+//        Log.d("PREPARE_JSON", result.toString());
+//        Toast.makeText(AnimalsActivity.this, result.toString(), Toast.LENGTH_LONG).show();
+        return result.toString();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -297,7 +272,41 @@ public class AnimalsActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        fetchAnimals();
+//        fetchAnimals();
         super.onResume();
+    }
+
+
+    public AnimalsList readFileOnInternalStorage(String sFileName) {
+        File file = new File(JSONPath, sFileName);
+        FileReader fileReader = null;
+        try {
+            fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            StringBuilder stringBuilder = new StringBuilder();
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                stringBuilder.append(line).append("\n");
+                line = bufferedReader.readLine();
+            }
+            bufferedReader.close();
+
+            String response = stringBuilder.toString();
+//            Log.d("READ_FILE", response);
+            JSONObject JSONResponse = new JSONObject(response);
+            AnimalsList localList = new Gson().fromJson(String.valueOf(JSONResponse), AnimalsList.class);
+            Log.d("NUM_OF_ANIMALS", "" + localList.getAnimals().size());
+            return localList;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

@@ -11,7 +11,20 @@
         android:paddingRight="24dp"
         android:background="@color/colorPrimary">
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:background="@color/colorPrimaryDark"
+        android:padding="12dp"
+        android:textColor="#FFFF"
+        android:text="سحب البيانات"
+        android:onClick="fetchAnimals"
+        />
+
         <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/animals_card"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
@@ -19,8 +32,10 @@
             android:background="@color/colorPrimaryDark"
             android:padding="12dp"
             android:textColor="#FFFF"
+            android:enabled="false"
+            android:clickable="false"
+            android:alpha="0.5"
             android:text="بطاقة الحيوان"
-            android:onClick="goToAnimals"
             />
 
     </LinearLayout>

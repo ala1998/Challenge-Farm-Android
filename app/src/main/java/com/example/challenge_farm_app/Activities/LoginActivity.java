@@ -18,10 +18,26 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.challenge_farm_app.Models.Animal;
+import com.example.challenge_farm_app.Models.AnimalsList;
+import com.example.challenge_farm_app.Models.User;
 import com.example.challenge_farm_app.Models.UsersList;
 import com.example.challenge_farm_app.Network.GetDataService;
 import com.example.challenge_farm_app.Network.RetrofitClientInstance;
 import com.example.challenge_farm_app.R;
+import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,8 +46,10 @@ import retrofit2.Response;
 public class LoginActivity extends AppCompatActivity {
     // String userAndroidId = "636bcf4b90a007bf"; // LG Id
     String userAndroidId = "D94BEA6FB3C703F1"; // Redmi 9 note s Id
-    String phoneAndroidId;
+    String phoneAndroidId = "D94BEA6FB3C703F1";
+    String JSONPath = "/storage/emulated/legacy/Download";
     String ip;
+    ArrayList<User> users = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,14 +69,15 @@ public class LoginActivity extends AppCompatActivity {
 
         Log.d("androidId", "" + phoneAndroidId);
 
+//        Toast.makeText(this, phoneAndroidId,Toast.LENGTH_LONG).show();
         loginBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (phoneAndroidId.equals(userAndroidId)) {
+//                if (phoneAndroidId.equals(userAndroidId)) {
                     checkUser(username.getText().toString(), pass.getText().toString());
-                } else {
-                    Toast.makeText(LoginActivity.this, "لا يمكنك الدخول على النظام من هذا الجهاز!", Toast.LENGTH_LONG).show();
-                }
+//                } else {
+//                    Toast.makeText(LoginActivity.this, "لا يمكنك الدخول على النظام من هذا الجهاز!", Toast.LENGTH_LONG).show();
+//                }
             }
         });
     }
@@ -67,37 +86,65 @@ public class LoginActivity extends AppCompatActivity {
         // String ip = "192.168.1.8";
         // String ip = "192.168.1.112";
 //         String ip = "10.0.2.2";
+
+        Log.d("IP HERE", ip);
+        File file = new File(JSONPath+"/users.json");
+        if(file.exists()) {
+            fetchLocalUsers();
+            loopAllUsers(username,pass);
+        }
+        else
+            fetchServerUsers(username,pass);
+
+        }
+
+    private void loopAllUsers(String username, String pass) {
+        final boolean[] found = {false};
+
+        for (int i = 0; i < users.size(); i++)
+            if (username.equals(users.get(i).getUsername()) && pass.equals(users.get(i).getPassword())) {
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                intent.putExtra("IP",ip);
+                startActivity(intent);
+                overridePendingTransition(R.anim.bottom_down, R.anim.bottom_up);
+                found[0] = true;
+                break;
+            }
+
+        if (!found[0])
+            Toast.makeText(LoginActivity.this, "اسم المستخدم أو كلمة المرور غير صحيحة، يرجى المحاولة مرة أخرى!", Toast.LENGTH_SHORT).show();
+
+    }
+
+    private void fetchLocalUsers() {
+        readFileOnInternalStorage("users.json");
+    }
+
+    private void fetchServerUsers(String username, String pass) {
         final GetDataService service = RetrofitClientInstance.getRetrofitInstance(ip).create(GetDataService.class);
         Call<UsersList> usersCall = service.getAllUsers();
 
         usersCall.enqueue(new Callback<UsersList>() {
             @Override
             public void onResponse(Call<UsersList> call, Response<UsersList> response) {
-                UsersList users = response.body();
-                boolean found = false, valid = true;
-
-                for (int i = 0; i < users.getUsers().size(); i++)
-                    if (username.equals(users.getUsers().get(i).getUsername()) && pass.equals(users.getUsers().get(i).getPassword())) {
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        intent.putExtra("IP",ip);
-                        startActivity(intent);
-                        overridePendingTransition(R.anim.bottom_down, R.anim.bottom_up);
-                        found = true;
-                        break;
-                    }
-
-                if (!found)
-                    Toast.makeText(LoginActivity.this, "The username or password is wrong, try again please!", Toast.LENGTH_SHORT).show();
+                 users = response.body().getUsers();
+                 loopAllUsers(username, pass);
+                try {
+                    writeFileOnInternalStorage("users.json", prepareJSON(users));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
             public void onFailure(Call<UsersList> call, Throwable t) {
-                Toast.makeText(LoginActivity.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+//                Toast.makeText(LoginActivity.this, "يُرجى تشغيل السيرفر عند أول استخدام للتطبيق!", Toast.LENGTH_SHORT).show();
 
             }
         });
-
     }
+
 
     public void getLocalIpAddress() {
         WifiManager manager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
@@ -131,7 +178,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call<UsersList> call, Throwable t) {
-                    Log.d("onFailure", t.getLocalizedMessage());
+//                  Toast.makeText(LoginActivity.this, "يُرجى تشغيل السيرفر عند أول استخدام للتطبيق!", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -156,4 +203,79 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
     }
+
+
+    public void writeFileOnInternalStorage(String sFileName, String sBody) {
+        File dir = new File(JSONPath);
+//        File dir = new File(String.valueOf(mContext.getFilesDir()));
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+
+        try {
+            File file = new File(dir, sFileName);
+            FileWriter writer = new FileWriter(file);
+            writer.append(sBody);
+            writer.flush();
+            writer.close();
+//            Log.d("Write file", "wwwwwwwwwww");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    private String prepareJSON(ArrayList<User> usersArrayList) throws JSONException {
+
+        JSONObject result = new JSONObject();
+
+        JSONArray jsonUsersArray = new JSONArray();
+
+        for (int i = 0; i < usersArrayList.size(); i++) {
+            JSONObject user = new JSONObject();
+            user.put("id", usersArrayList.get(i).getId());
+            user.put("username", usersArrayList.get(i).getUsername());
+            user.put("password", usersArrayList.get(i).getPassword());
+
+            jsonUsersArray.put(user);
+        }
+
+        result.put("data", jsonUsersArray);
+
+//        Log.d("PREPARE_JSON", result.toString());
+//        Toast.makeText(AnimalsActivity.this, result.toString(), Toast.LENGTH_LONG).show();
+        return result.toString();
+    }
+
+    public void readFileOnInternalStorage(String sFileName) {
+        File file = new File(JSONPath, sFileName);
+        FileReader fileReader = null;
+        try {
+            fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            StringBuilder stringBuilder = new StringBuilder();
+            String line = bufferedReader.readLine();
+            while (line != null) {
+                stringBuilder.append(line).append("\n");
+                line = bufferedReader.readLine();
+            }
+            bufferedReader.close();
+
+            String response = stringBuilder.toString();
+//            Log.d("READ_FILE", response);
+            JSONObject JSONResponse = new JSONObject(response);
+            UsersList localList = new Gson().fromJson(String.valueOf(JSONResponse), UsersList.class);
+
+           users = localList.getUsers();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+
+        }
+    }
+
 }
