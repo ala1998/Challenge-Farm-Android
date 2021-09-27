@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
 
-public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewItemAdapter.MyViewHolder>implements Filterable {
+public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewItemAdapter.MyViewHolder> implements Filterable {
 
     private List<Animal> animalsList;
     private List<Animal> animalsListFiltered;
@@ -48,9 +48,9 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
     private Context ctx;
     private String ip;
     private Activity activity;
-   // private AnimalClickListener clickListener;
+    // private AnimalClickListener clickListener;
 
-    public RecyclerviewItemAdapter(List<Animal> animalsList, Context ctx, String ip, Activity activity){
+    public RecyclerviewItemAdapter(List<Animal> animalsList, Context ctx, String ip, Activity activity) {
         this.animalsList = animalsList;
         this.getAnimalModelListFiltered = animalsList;
         this.ctx = ctx;
@@ -61,7 +61,7 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
     @Override
     public RecyclerviewItemAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_row,parent,false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_row, parent, false);
         return new MyViewHolder(view);
     }
 
@@ -73,59 +73,48 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
         holder.id.setText(String.valueOf(animal.getId()));
 //        Log.d("Status2", animal.getStatus2());
         try {
-            days = daysDiff(animal.getStatus_date(),position, animal.getId());
+            days = daysDiff(animal.getStatus_date(), position, animal.getId());
 //            Log.d("days", ""+daysDiff(animal.getStatus_date()));
         } catch (ParseException e) {
             e.printStackTrace();
         }
 
-        if(animal.getStatus2().equals("حالة ولادة") && days>=45) {
+        if (animal.getStatus2().equals("حالة ولادة") && days >= 45) {
             holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.yellow_border));
             holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.yellow_border));
             holder.name.setTextColor(Color.BLACK);
             holder.id.setTextColor(Color.BLACK);
-        }
-
-        else if(animal.getStatus2().equals("هرمون") && days>=30) {
+        } else if (animal.getStatus2().equals("هرمون") && days >= 30) {
             holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.green_border));
             holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.green_border));
             holder.name.setTextColor(Color.BLACK);
             holder.id.setTextColor(Color.BLACK);
-        }
-
-        else if(animal.getStatus2().equals("فلين") && days>=12) {
+        } else if (animal.getStatus2().equals("فلين") && days >= 12) {
             holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.black_border));
             holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.black_border));
             holder.name.setTextColor(Color.WHITE);
             holder.id.setTextColor(Color.WHITE);
-        }
-        else if(animal.getStatus2().equals("عشار") && days>90 && days<120) {
+        } else if (animal.getStatus2().equals("عشار") && days > 90 && days < 120) {
             holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.dark_blue_border));
             holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.dark_blue_border));
             holder.name.setTextColor(Color.WHITE);
             holder.id.setTextColor(Color.WHITE);
-        }
-
-        else if(animal.getStatus2().equals("عشار") && days>=120) {
+        } else if (animal.getStatus2().equals("عشار") && days >= 120) {
             holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.red_border));
             holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.red_border));
             holder.name.setTextColor(Color.WHITE);
             holder.id.setTextColor(Color.WHITE);
-        }
-        else if(animal.getStatus2().equals("محذوف")) {
+        } else if (animal.getStatus2().equals("محذوف")) {
             holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.light_blue_border));
             holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.light_blue_border));
             holder.name.setTextColor(Color.BLACK);
             holder.id.setTextColor(Color.BLACK);
-        }
-        else if(animal.getStatus2().equals("مشكلة")) {
+        } else if (animal.getStatus2().equals("مشكلة")) {
             holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.pink_border));
             holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.pink_border));
             holder.name.setTextColor(Color.WHITE);
             holder.id.setTextColor(Color.WHITE);
-        }
-        else
-        {
+        } else {
             holder.name.setBackground(ContextCompat.getDrawable(ctx, R.drawable.border));
             holder.id.setBackground(ContextCompat.getDrawable(ctx, R.drawable.border));
             holder.name.setTextColor(Color.BLACK);
@@ -134,7 +123,7 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(view.getContext(),InfoActivity.class);
+                Intent intent = new Intent(view.getContext(), InfoActivity.class);
 //                intent.putParcelableArrayListExtra("ANIMALS_LIST", (ArrayList<? extends Parcelable>) animalsList);
                 intent.putExtra("ANIMAL", animalsList.get(holder.getAdapterPosition()));
                 intent.putExtra("IP", ip);
@@ -160,21 +149,21 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
 
                 FilterResults filterResults = new FilterResults();
 
-                if(charSequence == null | charSequence.length() == 0){
-           //         Toast.makeText(ctx,"EMPTY",Toast.LENGTH_LONG).show();
+                if (charSequence == null | charSequence.length() == 0) {
+                    //         Toast.makeText(ctx,"EMPTY",Toast.LENGTH_LONG).show();
 
                     filterResults.count = getAnimalModelListFiltered.size();
                     filterResults.values = getAnimalModelListFiltered;
 
 
-                }else{
+                } else {
                     String searchChr = charSequence.toString().toLowerCase();
                     List<Animal> resultData = new ArrayList<>();
-                 //   Toast.makeText(ctx,"EXIST",Toast.LENGTH_LONG).show();
+                    //   Toast.makeText(ctx,"EXIST",Toast.LENGTH_LONG).show();
 
-                    for(Animal animalModel: getAnimalModelListFiltered){
-                        if(animalModel.getName().toLowerCase().equals(searchChr) || animalModel.getId().toString().equals(searchChr)){
-                      //Toast.makeText(ctx,"MATCH",Toast.LENGTH_LONG).show();
+                    for (Animal animalModel : getAnimalModelListFiltered) {
+                        if (animalModel.getName().toLowerCase().equals(searchChr) || animalModel.getId().toString().equals(searchChr)) {
+                            //Toast.makeText(ctx,"MATCH",Toast.LENGTH_LONG).show();
                             resultData.add(animalModel);
                         }
                     }
@@ -210,7 +199,7 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
             @Override
             protected void publishResults(CharSequence charSequence, FilterResults filterResults) {
                 animalsList = (ArrayList<Animal>) filterResults.values;
-              //Toast.makeText(ctx, "SIZE"+animalsList.size(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(ctx, "SIZE"+animalsList.size(), Toast.LENGTH_LONG).show();
                 notifyDataSetChanged();
             }
         };
@@ -219,10 +208,10 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
     /* public void setOnItemClickListener(AnimalClickListener clickListener) {
          this.clickListener = clickListener;
      }*/
-    class MyViewHolder extends RecyclerView.ViewHolder{
+    class MyViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView name,id;
-       // private LinearLayout itemLayout;
+        public TextView name, id;
+        // private LinearLayout itemLayout;
 
         public MyViewHolder(View itemView) {
             super(itemView);
@@ -235,11 +224,10 @@ public class RecyclerviewItemAdapter extends RecyclerView.Adapter<RecyclerviewIt
 
     public long daysDiff(String status_date, int position, int id)
             throws ParseException {
-        if(status_date==null || status_date.equals('0')) {
-            Log.d("NULL", "" + position+"    "+id);
+        if (status_date == null || status_date.equals('0')) {
+            Log.d("NULL", "" + position + "    " + id);
             return 0;
-        }
-        else{
+        } else {
 //            Log.d("STATUS DATE", status_date);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
             Date firstDate = sdf.parse(status_date);

@@ -6,14 +6,14 @@ import java.util.ArrayList;
 
 public class JawdaReq {
 
-    public ArrayList<Masdar> getJawdaName() {
+    public ArrayList<Jawda> getJawdaName() {
         return jawdaName;
     }
 
-    public void setJawdaName(ArrayList<Masdar> jawdaName) {
+    public void setJawdaName(ArrayList<Jawda> jawdaName) {
         this.jawdaName = jawdaName;
     }
 
     @SerializedName("data")
-    private ArrayList<Masdar> jawdaName;
+    private ArrayList<Jawda> jawdaName;
 }

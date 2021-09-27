@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -20,8 +21,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.challenge_farm_app.Adapters.RecyclerviewItemAdapter;
+import com.example.challenge_farm_app.Models.AllFarms;
+import com.example.challenge_farm_app.Models.AllJawda;
+import com.example.challenge_farm_app.Models.AllSolalat;
 import com.example.challenge_farm_app.Models.Animal;
 import com.example.challenge_farm_app.Models.AnimalsList;
+import com.example.challenge_farm_app.Models.Jawda;
+import com.example.challenge_farm_app.Models.JawdaReq;
+import com.example.challenge_farm_app.Models.Masdar;
+import com.example.challenge_farm_app.Models.MasdarReq;
+import com.example.challenge_farm_app.Models.Solala;
+import com.example.challenge_farm_app.Models.SolalaReq;
 import com.example.challenge_farm_app.Network.GetDataService;
 import com.example.challenge_farm_app.Network.RetrofitClientInstance;
 import com.example.challenge_farm_app.R;
@@ -43,8 +53,9 @@ public class MainActivity extends AppCompatActivity {
 
     String ip;
     public static ArrayList<Animal> animalArrayList;
-    String JSONPath = "/storage/emulated/legacy/Download";
+    String JSONPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
     Button animalsCard;
+    GetDataService service;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,14 +64,15 @@ public class MainActivity extends AppCompatActivity {
 //        activity = (Activity) this;
 
         animalsCard = findViewById(R.id.animals_card);
-        File file = new File(JSONPath+"/animals.json");
-        if(file.exists()) {
+        File file = new File(JSONPath + "/animals.json");
+        if (file.exists()) {
             animalsCard.setEnabled(true);
             animalsCard.setAlpha(1.0f);
             animalsCard.setClickable(true);
-         //   Log.d("json file", "Yessssssssssss");
+            //   Log.d("json file", "Yessssssssssss");
         }
         ip = getIntent().getStringExtra("IP");
+        service = RetrofitClientInstance.getRetrofitInstance(ip).create(GetDataService.class);
 
         animalsCard.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchAnimalsFromServer() {
 
-        final GetDataService service = RetrofitClientInstance.getRetrofitInstance(ip).create(GetDataService.class);
         Call<AnimalsList> animalsCall = service.getAllAnimals();
         animalsCall.enqueue(new Callback<AnimalsList>() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -96,7 +107,8 @@ public class MainActivity extends AppCompatActivity {
                 animalArrayList = animals.getAnimals();
                 if (animalArrayList != null) {
                     try {
-                        writeFileOnInternalStorage("animals.json", prepareJSON(animalArrayList));
+                        writeFileOnInternalStorage("animals.json", prepareAnimalsJSON(animalArrayList));
+                        fetchFarmsSolalatJawda();
                         animalsCard.setEnabled(true);
                         animalsCard.setAlpha(1.0f);
                         animalsCard.setClickable(true);
@@ -113,10 +125,121 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<AnimalsList> call, Throwable t) {
-                Toast.makeText(MainActivity.this, t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                Log.d("ANIMALS", t.getLocalizedMessage());
+                Toast.makeText(MainActivity.this, "يرجى التأكد من تشغيل السيرفر!", Toast.LENGTH_SHORT).show();
+
+            }
+        });
+    }
+
+    private void fetchFarmsSolalatJawda() {
+        Call<AllFarms> farmsCall = service.getFarms();
+        farmsCall.enqueue(new Callback<AllFarms>() {
+            @Override
+            public void onResponse(Call<AllFarms> call, Response<AllFarms> response) {
+                AllFarms farms = response.body();
+                if (farms.getFarms() != null) {
+                    try {
+                        writeFileOnInternalStorage("farms.json", prepareJSON(farms.getFarms(), null, null));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AllFarms> call, Throwable t) {
+                Log.d("FARMS", t.getLocalizedMessage());
+
+                Toast.makeText(MainActivity.this, "يرجى التأكد من تشغيل السيرفر!", Toast.LENGTH_LONG).show();
             }
         });
 
+        Call<AllSolalat> solalatCall = service.getSolalat();
+        solalatCall.enqueue(new Callback<AllSolalat>() {
+            @Override
+            public void onResponse(Call<AllSolalat> call, Response<AllSolalat> response) {
+                AllSolalat solalat = response.body();
+                if (solalat.getSolalat() != null) {
+                    try {
+                        writeFileOnInternalStorage("solalat.json", prepareJSON(null, null, solalat.getSolalat()));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AllSolalat> call, Throwable t) {
+                Log.d("SOLALAT", t.getLocalizedMessage());
+
+                Toast.makeText(MainActivity.this, "يرجى التأكد من تشغيل السيرفر!", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        Call<AllJawda> allJawdaCall = service.getAllJawda();
+        allJawdaCall.enqueue(new Callback<AllJawda>() {
+            @Override
+            public void onResponse(Call<AllJawda> call, Response<AllJawda> response) {
+                AllJawda jawdas = response.body();
+                if (jawdas.getAllJawda() != null) {
+                    try {
+                        writeFileOnInternalStorage("jawda.json", prepareJSON(null, jawdas.getAllJawda(), null));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+
+            public void onFailure(Call<AllJawda> call, Throwable t) {
+                Log.d("JAWDAS", t.getLocalizedMessage());
+
+                Toast.makeText(MainActivity.this, "يرجى التأكد من تشغيل السيرفر!", Toast.LENGTH_LONG).show();
+            }
+        });
+
+    }
+
+    private String prepareJSON(ArrayList<Masdar> farms, ArrayList<Jawda> jawdas, ArrayList<Solala> solalat) throws JSONException {
+
+        JSONObject result = new JSONObject();
+
+        try {
+            result.put("status", 200);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        JSONArray jsonArray = new JSONArray();
+
+        if (farms != null)
+            for (int i = 0; i < farms.size(); i++) {
+                JSONObject farm = new JSONObject();
+                farm.put("id", farms.get(i).getId());
+                farm.put("name", farms.get(i).getName());
+                jsonArray.put(farm);
+            }
+        else if (jawdas != null)
+            for (int i = 0; i < jawdas.size(); i++) {
+                JSONObject jawda = new JSONObject();
+                jawda.put("id", jawdas.get(i).getId());
+                jawda.put("name", jawdas.get(i).getName());
+                jsonArray.put(jawda);
+            }
+        else if (solalat != null)
+            for (int i = 0; i < solalat.size(); i++) {
+                JSONObject solala = new JSONObject();
+                solala.put("id", solalat.get(i).getId());
+                solala.put("name", solalat.get(i).getName());
+                jsonArray.put(solala);
+            }
+        result.put("data", jsonArray);
+
+//        Log.d("PREPARE_JSON", result.toString());
+//        Toast.makeText(AnimalsActivity.this, result.toString(), Toast.LENGTH_LONG).show();
+        return result.toString();
     }
 
     public void writeFileOnInternalStorage(String sFileName, String sBody) {
@@ -138,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String prepareJSON(ArrayList<Animal> animalArrayList) throws JSONException {
+    private String prepareAnimalsJSON(ArrayList<Animal> animalArrayList) throws JSONException {
 
         JSONObject result = new JSONObject();
 

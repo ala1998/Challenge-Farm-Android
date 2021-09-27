@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.text.format.Formatter;
 import android.util.Log;
@@ -44,10 +45,11 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
+    private static final String TAG = "AY";
     // String userAndroidId = "636bcf4b90a007bf"; // LG Id
     String userAndroidId = "D94BEA6FB3C703F1"; // Redmi 9 note s Id
     String phoneAndroidId = "D94BEA6FB3C703F1";
-    String JSONPath = "/storage/emulated/legacy/Download";
+    String JSONPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
     String ip;
     ArrayList<User> users = new ArrayList<>();
 
@@ -58,7 +60,7 @@ public class LoginActivity extends AppCompatActivity {
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         ActivityCompat.requestPermissions(LoginActivity.this,
-                new String[]{Manifest.permission.READ_PHONE_STATE},
+                new String[]{Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                 1);
 
         getLocalIpAddress();
@@ -74,7 +76,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 //                if (phoneAndroidId.equals(userAndroidId)) {
-                    checkUser(username.getText().toString(), pass.getText().toString());
+                checkUser(username.getText().toString(), pass.getText().toString());
 //                } else {
 //                    Toast.makeText(LoginActivity.this, "لا يمكنك الدخول على النظام من هذا الجهاز!", Toast.LENGTH_LONG).show();
 //                }
@@ -87,16 +89,18 @@ public class LoginActivity extends AppCompatActivity {
         // String ip = "192.168.1.112";
 //         String ip = "10.0.2.2";
 
-        Log.d("IP HERE", ip);
-        File file = new File(JSONPath+"/users.json");
-        if(file.exists()) {
+//        Log.d("IP HERE", ip);
+
+        File file = new File(JSONPath + "/users.json");
+        if (file.exists()) {
             fetchLocalUsers();
-            loopAllUsers(username,pass);
-        }
-        else
-            fetchServerUsers(username,pass);
+            loopAllUsers(username, pass);
+        } else {
+            fetchServerUsers(username, pass);
 
         }
+
+    }
 
     private void loopAllUsers(String username, String pass) {
         final boolean[] found = {false};
@@ -104,7 +108,7 @@ public class LoginActivity extends AppCompatActivity {
         for (int i = 0; i < users.size(); i++)
             if (username.equals(users.get(i).getUsername()) && pass.equals(users.get(i).getPassword())) {
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                intent.putExtra("IP",ip);
+                intent.putExtra("IP", ip);
                 startActivity(intent);
                 overridePendingTransition(R.anim.bottom_down, R.anim.bottom_up);
                 found[0] = true;
@@ -127,8 +131,8 @@ public class LoginActivity extends AppCompatActivity {
         usersCall.enqueue(new Callback<UsersList>() {
             @Override
             public void onResponse(Call<UsersList> call, Response<UsersList> response) {
-                 users = response.body().getUsers();
-                 loopAllUsers(username, pass);
+                users = response.body().getUsers();
+                loopAllUsers(username, pass);
                 try {
                     writeFileOnInternalStorage("users.json", prepareJSON(users));
                 } catch (JSONException e) {
@@ -138,8 +142,8 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<UsersList> call, Throwable t) {
-                Toast.makeText(LoginActivity.this, t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-//                Toast.makeText(LoginActivity.this, "يُرجى تشغيل السيرفر عند أول استخدام للتطبيق!", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(LoginActivity.this, t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(LoginActivity.this, "يُرجى تشغيل السيرفر عند أول استخدام للتطبيق!", Toast.LENGTH_SHORT).show();
 
             }
         });
@@ -197,10 +201,11 @@ public class LoginActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 } else {
-                    Toast.makeText(LoginActivity.this, "يُرجى السماح بالوصول إلى أذونات الهاتف للتحقق من صلاحية الجهاز لدخول النظام!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, "يُرجى السماح بالوصول إلى أذونات الهاتف ومساحة التخزين!", Toast.LENGTH_LONG).show();
                 }
                 return;
             }
+
         }
     }
 
@@ -223,6 +228,7 @@ public class LoginActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
     private String prepareJSON(ArrayList<User> usersArrayList) throws JSONException {
 
         JSONObject result = new JSONObject();
@@ -264,7 +270,7 @@ public class LoginActivity extends AppCompatActivity {
             JSONObject JSONResponse = new JSONObject(response);
             UsersList localList = new Gson().fromJson(String.valueOf(JSONResponse), UsersList.class);
 
-           users = localList.getUsers();
+            users = localList.getUsers();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -277,5 +283,52 @@ public class LoginActivity extends AppCompatActivity {
 
         }
     }
+
+    public void refresh(View view) {
+        Intent i = new Intent(LoginActivity.this, LoginActivity.class);
+        finish();
+        startActivity(i);
+    }
+/*
+
+    public  boolean isWriteStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+//                Log.v(TAG,"Permission is granted");
+                return true;
+            } else {
+
+//                Log.v(TAG,"Permission is revoked");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+//            Log.v(TAG,"Permission is granted");
+            return true;
+        }
+    }
+
+    public  boolean isReadStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+//                Log.v(TAG,"Permission is granted");
+                return true;
+            } else {
+
+//                Log.v(TAG,"Permission is revoked");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+//            Log.v(TAG,"Permission is granted");
+            return true;
+        }
+    }
+
+*/
 
 }

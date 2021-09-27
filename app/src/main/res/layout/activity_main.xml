@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-    <LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:foregroundGravity="center"
-        android:layout_gravity="center"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingTop="56dp"
-        android:paddingLeft="24dp"
-        android:paddingRight="24dp"
-        android:background="@color/colorPrimary">
+
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:background="@color/colorPrimary"
+    android:foregroundGravity="center"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingLeft="24dp"
+    android:paddingTop="56dp"
+    android:paddingRight="24dp">
 
     <androidx.appcompat.widget.AppCompatButton
         android:layout_width="fill_parent"
@@ -17,25 +20,24 @@
         android:layout_marginTop="24dp"
         android:layout_marginBottom="24dp"
         android:background="@color/colorPrimaryDark"
-        android:padding="12dp"
-        android:textColor="#FFFF"
-        android:text="سحب البيانات"
         android:onClick="fetchAnimals"
-        />
+        android:padding="12dp"
+        android:text="سحب البيانات"
+        android:textColor="#FFFF" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/animals_card"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp"
-            android:background="@color/colorPrimaryDark"
-            android:padding="12dp"
-            android:textColor="#FFFF"
-            android:enabled="false"
-            android:clickable="false"
-            android:alpha="0.5"
-            android:text="بطاقة الحيوان"
-            />
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/animals_card"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:alpha="0.5"
+        android:background="@color/colorPrimaryDark"
+        android:clickable="false"
+        android:enabled="false"
+        android:padding="12dp"
+        android:text="بطاقة الحيوان"
+        android:textColor="#FFFF" />
 
-    </LinearLayout>
+
+</LinearLayout>

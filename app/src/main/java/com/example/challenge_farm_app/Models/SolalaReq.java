@@ -6,14 +6,14 @@ import java.util.ArrayList;
 
 public class SolalaReq {
 
-    public ArrayList<Masdar> getSolalaName() {
+    public ArrayList<Solala> getSolalaName() {
         return solalaName;
     }
 
-    public void setSolalaName(ArrayList<Masdar> solalaName) {
+    public void setSolalaName(ArrayList<Solala> solalaName) {
         this.solalaName = solalaName;
     }
 
     @SerializedName("data")
-    private ArrayList<Masdar> solalaName;
+    private ArrayList<Solala> solalaName;
 }

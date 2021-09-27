@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -65,7 +66,7 @@ public class AnimalsActivity extends AppCompatActivity {
     String ip;
     View include;
     Activity activity;
-    String JSONPath = "/storage/emulated/legacy/Download";
+    String JSONPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
 
     // boolean searchFlag = false;
     @SuppressLint("ResourceType")
@@ -299,12 +300,17 @@ public class AnimalsActivity extends AppCompatActivity {
             return localList;
 
         } catch (FileNotFoundException e) {
+            Log.d("FileNotFoundException", "FileNotFoundException: ");
             e.printStackTrace();
             return null;
         } catch (IOException e) {
+            Log.d("IOException", "IOException: ");
+
             e.printStackTrace();
             return null;
         } catch (JSONException e) {
+            Log.d("JSONException", "JSONException: ");
+
             e.printStackTrace();
             return null;
         }
