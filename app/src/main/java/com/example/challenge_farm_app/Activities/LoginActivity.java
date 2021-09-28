@@ -210,6 +210,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
+
     public void writeFileOnInternalStorage(String sFileName, String sBody) {
         File dir = new File(JSONPath);
 //        File dir = new File(String.valueOf(mContext.getFilesDir()));

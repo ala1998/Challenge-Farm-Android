@@ -32,7 +32,7 @@
                 android:resource="@xml/searchable" />
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.challenge_farm_app.Activities.LoginActivity" />
+                android:value="com.example.challenge_farm_app.Activities.MainActivity" />
 
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />

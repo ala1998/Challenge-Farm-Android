@@ -2,6 +2,7 @@ package com.example.challenge_farm_app.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -139,6 +140,7 @@ public class InfoActivity extends AppCompatActivity {
             File farmsFile = new File(JSONPath + "/farms.json");
             File solalatFile = new File(JSONPath + "/solalat.json");
             File jawdaFile = new File(JSONPath + "/jawda.json");
+
             if (farmsFile.exists() && solalatFile.exists() && jawdaFile.exists()) {
                 fetchLocalInfo();
             } else {
@@ -167,6 +169,8 @@ public class InfoActivity extends AppCompatActivity {
     }
 
     private void fetchServerInfo() {
+
+
         Call<MasdarReq> farmCall = service.getFarmByID(farmID);
         Call<SolalaReq> solalaCall = service.getSolalaByID(solalaID);
         Call<JawdaReq> jawdaCall = service.getJawdaByID(jawdaID);
@@ -175,18 +179,30 @@ public class InfoActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<MasdarReq> call, Response<MasdarReq> response) {
 //                        Log.d("BODY", String.valueOf(response));
-                if (response.body() != null && response.body().getMasdarName() != null && response.body().getMasdarName().size() > 0)
-                    masdar = response.body().getMasdarName().get(0).getName();
+                if (response.body() != null && response.body().getMasdarName() != null && response.body().getMasdarName().size() > 0) {
+                    if(id == 752 && farmID == 0)
+                        masdar = "المزرعة - محلي";
+                    else
+                        masdar = response.body().getMasdarName().get(0).getName();
+                }
                 solalaCall.enqueue(new Callback<SolalaReq>() {
                     @Override
                     public void onResponse(Call<SolalaReq> call, Response<SolalaReq> response) {
-                        if (response.body() != null && response.body().getSolalaName() != null && response.body().getSolalaName().size() > 0)
-                            solala = response.body().getSolalaName().get(0).getName();
+                        if (response.body() != null && response.body().getSolalaName() != null && response.body().getSolalaName().size() > 0) {
+                            if(id == 13 && solalaID == 0)
+                                solala = "عساف";
+                            else
+                                solala = response.body().getSolalaName().get(0).getName();
+                        }
                         jawdaCall.enqueue(new Callback<JawdaReq>() {
                             @Override
                             public void onResponse(Call<JawdaReq> call, Response<JawdaReq> response) {
-                                if (response.body() != null && response.body().getJawdaName() != null && response.body().getJawdaName().size() > 0)
-                                    jawda = response.body().getJawdaName().get(0).getName();
+                                if (response.body() != null && response.body().getJawdaName() != null && response.body().getJawdaName().size() > 0){
+                                    if(id == 752 && jawdaID == 0)
+                                        jawda = "عادي";
+                                    else
+                                        jawda = response.body().getJawdaName().get(0).getName();
+                                }
 //                    Toast.makeText(InfoActivity.this,masdar+"\n"+solala+"\n"+jawda,Toast.LENGTH_LONG).show();
                                 displayInfo();
                             }
@@ -249,20 +265,32 @@ public class InfoActivity extends AppCompatActivity {
     }
 
     private void fetchLocalInfo() {
+        if(id == 752 && farmID == 0)
+            masdar = "المزرعة - محلي";
+        else {
+            if ((farmsList = readFarmsFromInternalStorage("farms.json").getFarms()) != null)
+                for (int i = 0; i < farmsList.size(); i++)
+                    if (farmID == farmsList.get(i).getId())
+                        masdar = farmsList.get(i).getName();
+        }
 
-        if ((farmsList = readFarmsFromInternalStorage("farms.json").getFarms()) != null)
-            for (int i = 0; i < farmsList.size(); i++)
-                if (farmID == farmsList.get(i).getId())
-                    masdar = farmsList.get(i).getName();
-        if ((solalatList = readSolalatFromInternalStorage("solalat.json").getSolalat()) != null)
-            for (int i = 0; i < solalatList.size(); i++)
-                if (solalaID == solalatList.get(i).getId())
-                    solala = solalatList.get(i).getName();
-        if ((jawdasList = readJawdaFromInternalStorage("jawda.json").getAllJawda()) != null)
-            for (int i = 0; i < jawdasList.size(); i++)
-                if (jawdaID == jawdasList.get(i).getId())
-                    jawda = jawdasList.get(i).getName();
-
+        if(id == 13 && solalaID == 0)
+            solala = "عساف";
+        else {
+            if ((solalatList = readSolalatFromInternalStorage("solalat.json").getSolalat()) != null)
+                for (int i = 0; i < solalatList.size(); i++)
+                    if (solalaID == solalatList.get(i).getId())
+                        solala = solalatList.get(i).getName();
+        }
+        
+        if(id == 752 && jawdaID == 0)
+            jawda = "عادي";
+        else {
+            if ((jawdasList = readJawdaFromInternalStorage("jawda.json").getAllJawda()) != null)
+                for (int i = 0; i < jawdasList.size(); i++)
+                    if (jawdaID == jawdasList.get(i).getId())
+                        jawda = jawdasList.get(i).getName();
+        }
         displayInfo();
 
     }
@@ -379,6 +407,12 @@ public class InfoActivity extends AppCompatActivity {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+//        startActivity( new Intent(this, AnimalsActivity.class) );
+        finish();
     }
 
 }

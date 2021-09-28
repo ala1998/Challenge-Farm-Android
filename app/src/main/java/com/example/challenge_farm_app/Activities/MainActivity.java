@@ -311,5 +311,10 @@ public class MainActivity extends AppCompatActivity {
         return result.toString();
     }
 
+    @Override
+    public void onBackPressed() {
+//        startActivity( new Intent(this, LoginActivity.class) );
+        finish();
+    }
 
 }

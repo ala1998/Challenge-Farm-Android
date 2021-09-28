@@ -14,6 +14,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
@@ -93,10 +94,10 @@ public class AnimalsActivity extends AppCompatActivity {
 
         //animalArrayList = getIntent().getParcelableArrayListExtra("ANIMALS_LIST");
 
-        if (animalArrayList == null) {
-            showGIF();
+//        if (animalArrayList == null) {
+//            showGIF();
             fetchAnimalsFromLocal();
-        }
+//        }
 
     }
 
@@ -168,8 +169,8 @@ public class AnimalsActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     private void fetchAnimalsFromLocal() {
-
-        if ((animalArrayList = readFileOnInternalStorage("animals.json").getAnimals()) != null) {
+        animalArrayList = readFileOnInternalStorage("animals.json").getAnimals();
+        if ( animalArrayList!= null) {
 //            animalArrayList = readFileOnInternalStorage("animals.json").getAnimals();
 
             displayRecyclerView(animalArrayList);
@@ -264,11 +265,13 @@ public class AnimalsActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         // close search view on back button pressed
-        if (!searchView.isIconified()) {
+      /*  if (!searchView.isIconified()) {
             searchView.setIconified(true);
             return;
-        }
-        super.onBackPressed();
+        }*/
+//        startActivity( new Intent(this, MainActivity.class) );
+        finish();
+//        super.onBackPressed();
     }
 
     @Override
